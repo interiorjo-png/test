@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 집 장보기</title>
+<style>
+  :root {
+    --bg: #fff8ef;
+    --ink: #4a3f55;
+    --muted: #9a8fa6;
+    --pink: #ffe3ec;
+    --pink-deep: #ff8fb1;
+    --sky: #e2f1ff;
+    --sky-deep: #6fb6ff;
+    --mint: #c9f2df;
+    --mint-deep: #3fbf86;
+    --yellow: #fff1b8;
+    --card: #ffffff;
+    --shadow: 0 6px 0 rgba(74, 63, 85, 0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image: radial-gradient(#ffd9e6 1.5px, transparent 1.5px), radial-gradient(#d4ebff 1.5px, transparent 1.5px);
+    background-size: 36px 36px;
+    background-position: 0 0, 18px 18px;
+    color: var(--ink);
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; }
+
+  header { text-align: center; margin-bottom: 24px; }
+  h1 {
+    margin: 0;
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .remain {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 16px;
+    background: var(--yellow);
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: var(--shadow);
+  }
+
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .columns { grid-template-columns: 1fr; } }
+
+  .col {
+    border-radius: 28px;
+    padding: 20px 18px 18px;
+    box-shadow: var(--shadow);
+    border: 3px solid #fff;
+  }
+  .col.regular { background: var(--pink); --accent: var(--pink-deep); }
+  .col.weekly  { background: var(--sky);  --accent: var(--sky-deep); }
+  .col h2 {
+    margin: 0 0 4px;
+    font-size: 1.3rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .col h2 .count {
+    font-size: 0.85rem;
+    background: #fff;
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .col .hint { margin: 0 0 14px; font-size: 0.85rem; color: var(--muted); }
+
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .empty {
+    text-align: center; color: var(--muted); padding: 18px 0; font-size: 0.95rem;
+  }
+
+  li.item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 10px 12px;
+    box-shadow: 0 3px 0 rgba(74, 63, 85, 0.06);
+    transition: opacity .2s;
+  }
+  li.item.done { opacity: 0.55; }
+
+  .check {
+    flex: none;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    background: #fff;
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 16px; color: #fff;
+    padding: 0;
+  }
+  li.done .check { background: var(--mint-deep); border-color: var(--mint-deep); }
+  .check.pop { animation: pop .35s ease; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  .body { flex: 1; min-width: 0; cursor: pointer; }
+  @media (max-width: 420px) {
+    .wrap { padding-top: 20px; }
+    h1 { font-size: 1.6rem; }
+    .col { padding: 16px 12px 12px; }
+    li.item { flex-wrap: wrap; row-gap: 6px; }
+    .body { flex-basis: calc(100% - 82px); }
+    .qty { margin-left: 40px; }
+    .del { margin-left: auto; }
+  }
+  .name { font-weight: 700; font-size: 1.05rem; word-break: break-all; }
+  .memo { font-size: 0.82rem; color: var(--muted); margin-top: 2px; word-break: break-all; }
+  li.done .name, li.done .memo { text-decoration: line-through; }
+
+  .qty { flex: none; display: flex; align-items: center; gap: 4px; }
+  .qty button, .del {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: 1rem; font-weight: 800;
+    cursor: pointer;
+    padding: 0;
+  }
+  .qty button:hover { filter: brightness(0.95); }
+  .qty span { min-width: 30px; text-align: center; font-weight: 800; }
+  .del { background: #f3eef7; color: var(--muted); font-size: 0.85rem; }
+  .del:hover { background: #ffd2d2; color: #d9534f; }
+
+  form.add {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 20px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 64px;
+    gap: 8px;
+  }
+  form.add input {
+    border: 2px solid transparent;
+    background: #fff;
+    border-radius: 14px;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--ink);
+    min-width: 0;
+  }
+  form.add input:focus { outline: none; border-color: var(--accent); }
+  form.add .memo-in { grid-column: 1 / 2; }
+  form.add button {
+    border: none;
+    border-radius: 14px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit; font-weight: 800;
+    cursor: pointer;
+  }
+  form.add button:hover { filter: brightness(1.05); }
+
+  .footer { text-align: center; margin-top: 28px; }
+  .reset {
+    border: none;
+    background: var(--mint);
+    color: #1f7a52;
+    font: inherit; font-weight: 800; font-size: 1.1rem;
+    padding: 14px 28px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .reset:hover { filter: brightness(0.97); }
+  .reset-note { margin-top: 8px; font-size: 0.82rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🛒 우리 집 장보기</h1>
+    <div class="remain" id="remain"></div>
+  </header>
+
+  <div class="columns">
+    <section class="col regular" data-list="regular">
+      <h2>⭐ 자주 사는 것 <span class="count"></span></h2>
+      <p class="hint">늘 사는 기본 품목이에요</p>
+      <ul></ul>
+      <form class="add">
+        <input class="name-in" placeholder="품목 이름 (예: 우유)" maxlength="40" required>
+        <input class="qty-in" type="number" min="1" max="99" value="1" aria-label="수량">
+        <input class="memo-in" placeholder="메모 (선택)" maxlength="60">
+        <button type="submit">추가</button>
+      </form>
+    </section>
+
+    <section class="col weekly" data-list="weekly">
+      <h2>📅 이번 주 <span class="count"></span></h2>
+      <p class="hint">이번에만 살 품목이에요</p>
+      <ul></ul>
+      <form class="add">
+        <input class="name-in" placeholder="품목 이름 (예: 딸기)" maxlength="40" required>
+        <input class="qty-in" type="number" min="1" max="99" value="1" aria-label="수량">
+        <input class="memo-in" placeholder="메모 (선택)" maxlength="60">
+        <button type="submit">추가</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="footer">
+    <button class="reset" id="reset">🔄 새 장보기</button>
+    <div class="reset-note">자주 사는 것은 체크만 풀리고, 이번 주 품목은 지워져요</div>
+  </div>
+</div>
+
+<script>
+  const KEY = "our-home-shopping-v1";
+
+  const defaults = {
+    regular: [
+      { name: "우유", qty: 2, memo: "저지방" },
+      { name: "계란", qty: 1, memo: "30구" },
+      { name: "두부", qty: 1, memo: "" },
+      { name: "휴지", qty: 1, memo: "할인하면" },
+    ],
+    weekly: [],
+  };
+
+  function makeItem(o) {
+    return { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), name: o.name, qty: o.qty || 1, memo: o.memo || "", done: false };
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.regular) && Array.isArray(data.weekly)) return data;
+      }
+    } catch (e) {}
+    return { regular: defaults.regular.map(makeItem), weekly: [] };
+  }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  let state = load();
+  let popId = null;
+
+  function render() {
+    let remainTotal = 0;
+    for (const key of ["regular", "weekly"]) {
+      const section = document.querySelector(`[data-list="${key}"]`);
+      const ul = section.querySelector("ul");
+      const items = state[key];
+      // 안 산 것 먼저, 산 것은 아래로 (각 그룹 안에서는 추가한 순서 유지)
+      const sorted = [...items.filter(i => !i.done), ...items.filter(i => i.done)];
+      const left = items.filter(i => !i.done).length;
+      remainTotal += left;
+      section.querySelector(".count").textContent = `${left} / ${items.length}`;
+
+      ul.innerHTML = "";
+      if (!items.length) {
+        const li = document.createElement("li");
+        li.className = "empty";
+        li.textContent = "아직 항목이 없어요 🌱";
+        ul.appendChild(li);
+        continue;
+      }
+      for (const it of sorted) {
+        const li = document.createElement("li");
+        li.className = "item" + (it.done ? " done" : "");
+
+        const check = document.createElement("button");
+        check.className = "check" + (popId === it.id ? " pop" : "");
+        check.setAttribute("aria-label", it.done ? "체크 해제" : "체크");
+        check.textContent = it.done ? "✓" : "";
+        check.onclick = () => toggle(key, it.id);
+
+        const body = document.createElement("div");
+        body.className = "body";
+        body.onclick = () => toggle(key, it.id);
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = it.name;
+        body.appendChild(name);
+        if (it.memo) {
+          const memo = document.createElement("div");
+          memo.className = "memo";
+          memo.textContent = "📝 " + it.memo;
+          body.appendChild(memo);
+        }
+
+        const qty = document.createElement("div");
+        qty.className = "qty";
+        const minus = document.createElement("button");
+        minus.textContent = "−";
+        minus.setAttribute("aria-label", "수량 줄이기");
+        minus.onclick = () => changeQty(key, it.id, -1);
+        const num = document.createElement("span");
+        num.textContent = "×" + it.qty;
+        const plus = document.createElement("button");
+        plus.textContent = "+";
+        plus.setAttribute("aria-label", "수량 늘리기");
+        plus.onclick = () => changeQty(key, it.id, 1);
+        qty.append(minus, num, plus);
+
+        const del = document.createElement("button");
+        del.className = "del";
+        del.textContent = "✕";
+        del.setAttribute("aria-label", "삭제");
+        del.onclick = () => remove(key, it.id);
+
+        li.append(check, body, qty, del);
+        ul.appendChild(li);
+      }
+    }
+    document.getElementById("remain").textContent =
+      remainTotal ? `🧺 ${remainTotal}개 남았어요` : "🎉 다 샀어요!";
+    popId = null;
+  }
+
+  function find(key, id) { return state[key].find(i => i.id === id); }
+
+  function toggle(key, id) {
+    const it = find(key, id);
+    it.done = !it.done;
+    popId = id;
+    save(); render();
+  }
+
+  function changeQty(key, id, d) {
+    const it = find(key, id);
+    it.qty = Math.min(99, Math.max(1, it.qty + d));
+    save(); render();
+  }
+
+  function remove(key, id) {
+    state[key] = state[key].filter(i => i.id !== id);
+    save(); render();
+  }
+
+  document.querySelectorAll("form.add").forEach(form => {
+    const key = form.closest(".col").dataset.list;
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const nameIn = form.querySelector(".name-in");
+      const qtyIn = form.querySelector(".qty-in");
+      const memoIn = form.querySelector(".memo-in");
+      const name = nameIn.value.trim();
+      if (!name) return;
+      const qty = Math.min(99, Math.max(1, parseInt(qtyIn.value, 10) || 1));
+      state[key].push(makeItem({ name, qty, memo: memoIn.value.trim() }));
+      save(); render();
+      nameIn.value = ""; memoIn.value = ""; qtyIn.value = 1;
+      nameIn.focus();
+    });
+  });
+
+  document.getElementById("reset").onclick = () => {
+    if (!confirm("새 장보기를 시작할까요?\n자주 사는 것은 체크가 풀리고, 이번 주 품목은 모두 지워져요.")) return;
+    state.regular.forEach(i => { i.done = false; });
+    state.weekly = [];
+    save(); render();
+  };
+
+  render();
+</script>
+</body>
+</html>
